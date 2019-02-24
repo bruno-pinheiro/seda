@@ -8,6 +8,7 @@
 #' @param df a data.frame object
 #' @param varcut a categorical variable to facet the plot.
 #' @param title a string defining the plot title
+#' @param mode a string defining the plot title
 #' @param colors a character vector of lenght 2, indicating NA and non-NA
 #'        colors in the plot
 #'
@@ -18,6 +19,8 @@
 #'          can plot results grouped by one variable. In this case the plot
 #'          will be faceted with \code{\link{facet_wrap}} horizontally
 #'          displayed.
+#'
+#'          - @param mode options: "light" (default), or "dark"
 #'
 #' @return If \code{varcut} is not passed, then the function plot a simple
 #'         stacked barplot showing the counts of NAs for each variable in
@@ -40,10 +43,55 @@
 #'
 #' @export
 plot_na <- function(df, datecut = NULL, title = NULL,
-                    colors = c("purple3", "yellow")){
-  if (is.null(datecut)){
-    return(
-      df %>%
+                    mode = "light", colors = c("purple3", "yellow")){
+  if (mode == "light") {
+    if (is.null(datecut)){
+      return(
+        df %>%
+          tibble::as_tibble() %>%
+          dplyr::mutate_all(as.character) %>%
+          tidyr::gather(key, value) %>%
+          dplyr::mutate(key = factor(key, levels = rev(names(df)))) %>%
+          dplyr::group_by(key) %>%
+          dplyr::count(na = is.na(value)) %>%
+          dplyr::mutate(na = if_else(na == TRUE, "Sim", "Não")) %>%
+          ggplot2::ggplot(aes(x = key, y = n, fill = na)) +
+          ggplot2::geom_bar(stat = "identity") +
+          ggplot2::scale_fill_manual(values = colors, "Valor é NA?") +
+          ggplot2::labs(title = title, x = NULL, y = NULL) +
+          ggplot2::theme(axis.text.x = element_blank(),
+                         legend.position = "top") +
+          ggplot2::coord_flip() +
+          light_theme() +
+          theme(axis.text.x = element_blank())
+      )
+    } else {
+      date_cut <- enquo(datecut)
+      return(
+        df %>%
+          tibble::as_tibble() %>%
+          dplyr::rename_("varcut" = datecut) %>%
+          dplyr::mutate_all(as.character) %>%
+          tidyr::gather(key, value, - varcut) %>%
+          dplyr::mutate(key = factor(key, levels = rev(names(df)))) %>%
+          dplyr::group_by(varcut, key) %>%
+          dplyr::count(na = is.na(value)) %>%
+          dplyr::mutate(na = if_else(na == TRUE, "Sim", "Não")) %>%
+          ggplot2::ggplot(aes(x = key, y = n, fill = na)) +
+          ggplot2::geom_bar(stat = "identity") +
+          ggplot2::scale_fill_manual(values = colors, "Valor é NA?") +
+          ggplot2::facet_wrap(~varcut, scales = "free_x" ,
+                              ncol = df %>% dplyr::pull(!!date_cut) %>% unique %>% length) +
+          ggplot2::labs(title = title, x = NULL, y = NULL) +
+          ggplot2::theme(axis.text.x = element_blank(), legend.position = "top") +
+          ggplot2::coord_flip() +
+          light_theme() +
+          theme(axis.text.x = element_blank())
+      )
+    }
+  } else if (mode == "dark") {
+    if (is.null(datecut)){
+      p <- df %>%
         tibble::as_tibble() %>%
         dplyr::mutate_all(as.character) %>%
         tidyr::gather(key, value) %>%
@@ -60,34 +108,36 @@ plot_na <- function(df, datecut = NULL, title = NULL,
         ggplot2::coord_flip() +
         dark_theme() +
         theme(axis.text.x = element_blank())
-    )
-  } else {
-
-    date_cut <- enquo(datecut)
-    return(
-      df %>%
-        tibble::as_tibble() %>%
-        dplyr::rename_("varcut" = datecut) %>%
-        dplyr::mutate_all(as.character) %>%
-        tidyr::gather(key, value, - varcut) %>%
-        dplyr::mutate(key = factor(key, levels = rev(names(df)))) %>%
-        dplyr::group_by(varcut, key) %>%
-        dplyr::count(na = is.na(value)) %>%
-        dplyr::mutate(na = if_else(na == TRUE, "Sim", "Não")) %>%
-        ggplot2::ggplot(aes(x = key, y = n, fill = na)) +
-        ggplot2::geom_bar(stat = "identity") +
-        ggplot2::scale_fill_manual(values = colors, "Valor é NA?") +
-        ggplot2::facet_wrap(~varcut, scales = "free_x" ,
-                            ncol = df %>% dplyr::pull(!!date_cut) %>% unique %>% length) +
-        ggplot2::labs(title = title, x = NULL, y = NULL) +
-        ggplot2::theme(axis.text.x = element_blank(), legend.position = "top") +
-        ggplot2::coord_flip() +
-        dark_theme() +
-        theme(axis.text.x = element_blank())
-    )
+      ggdark::invert_geom_defaults()
+      message("ATENTION: Already done inside seda::plot_na")
+      return(p)
+      } else {
+        date_cut <- enquo(datecut)
+        p <- df %>%
+          tibble::as_tibble() %>%
+          dplyr::rename_("varcut" = datecut) %>%
+          dplyr::mutate_all(as.character) %>%
+          tidyr::gather(key, value, - varcut) %>%
+          dplyr::mutate(key = factor(key, levels = rev(names(df)))) %>%
+          dplyr::group_by(varcut, key) %>%
+          dplyr::count(na = is.na(value)) %>%
+          dplyr::mutate(na = if_else(na == TRUE, "Sim", "Não")) %>%
+          ggplot2::ggplot(aes(x = key, y = n, fill = na)) +
+          ggplot2::geom_bar(stat = "identity") +
+          ggplot2::scale_fill_manual(values = colors, "Valor é NA?") +
+          ggplot2::facet_wrap(~varcut, scales = "free_x" ,
+                              ncol = df %>% dplyr::pull(!!date_cut) %>% unique %>% length) +
+          ggplot2::labs(title = title, x = NULL, y = NULL) +
+          ggplot2::theme(axis.text.x = element_blank(), legend.position = "top") +
+          ggplot2::coord_flip() +
+          dark_theme() +
+          theme(axis.text.x = element_blank())
+        ggdark::invert_geom_defaults()
+        message("ATENTION: Already done inside seda::plot_na")
+        return(p)
+      }
   }
 }
-
 
 #' @title Bar plot for univariate analysis
 #' @name plot_bar
