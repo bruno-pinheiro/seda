@@ -8,7 +8,7 @@
 #' @param df a data.frame object
 #' @param varcut a categorical variable to facet the plot.
 #' @param title a string defining the plot title
-#' @param mode a string defining the plot title
+#' @param mode a string defining theme: "light" (default) or "dark"
 #' @param colors a character vector of lenght 2, indicating NA and non-NA
 #'        colors in the plot
 #'
@@ -20,7 +20,7 @@
 #'          will be faceted with \code{\link{facet_wrap}} horizontally
 #'          displayed.
 #'
-#'          - @param mode options: "light" (default), or "dark"
+#'          * \code{mode} options: "light" (default), or "dark"
 #'
 #' @return If \code{varcut} is not passed, then the function plot a simple
 #'         stacked barplot showing the counts of NAs for each variable in
@@ -28,66 +28,70 @@
 #'
 #' @examples
 #' # plot_na without varcut
-#' plot_na(df)
+#' plot_na(sample_data)
 #'
 #' # plot_na with varcut
-#' plot_na(df, varcut = "cut")
+#' plot_na(sample_data, varcut = "cut_var")
 #'
-#' # plot_na manipulation other parameters
-#' plot_na(df, varcut = "e", "Counts of NAs", c("yellow", "purple"))
+#' # plot_na manipulating other parameters
+#' plot_na(
+#'   sample_data,
+#'   varcut = "cut_var",
+#'   title = "Counts of NAs",
+#'   mode = "dark",
+#'   colors = c("red", "darkgreen")
+#'   )
 #'
-#' @import ggplot2 ggdark
-#' @importFrom dplyr if_else
 #' @importFrom magrittr "%>%"
-#' @importFrom rlang enquo
 #'
 #' @export
 plot_na <- function(df, datecut = NULL, title = NULL,
                     mode = "light", colors = c("purple3", "yellow")){
   if (mode == "light") {
     if (is.null(datecut)){
-      return(
-        df %>%
-          tibble::as_tibble() %>%
-          dplyr::mutate_all(as.character) %>%
-          tidyr::gather(key, value) %>%
-          dplyr::mutate(key = factor(key, levels = rev(names(df)))) %>%
-          dplyr::group_by(key) %>%
-          dplyr::count(na = is.na(value)) %>%
-          dplyr::mutate(na = if_else(na == TRUE, "Sim", "Não")) %>%
-          ggplot2::ggplot(aes(x = key, y = n, fill = na)) +
-          ggplot2::geom_bar(stat = "identity") +
-          ggplot2::scale_fill_manual(values = colors, "Valor é NA?") +
-          ggplot2::labs(title = title, x = NULL, y = NULL) +
-          ggplot2::theme(axis.text.x = element_blank(),
-                         legend.position = "top") +
-          ggplot2::coord_flip() +
-          light_theme() +
-          theme(axis.text.x = element_blank())
-      )
+      p <- df %>%
+        tibble::as_tibble() %>%
+        dplyr::mutate_all(as.character) %>%
+        tidyr::gather(key, value) %>%
+        dplyr::mutate(key = factor(key, levels = rev(names(df)))) %>%
+        dplyr::group_by(key) %>%
+        dplyr::count(na = is.na(value)) %>%
+        dplyr::mutate(na = dplyr::if_else(na == TRUE, "Sim", "Não")) %>%
+        ggplot2::ggplot(aes(x = key, y = n, fill = na)) +
+        ggplot2::geom_bar(stat = "identity") +
+        ggplot2::scale_fill_manual(values = colors, "Valor é NA?") +
+        ggplot2::labs(title = title, x = NULL, y = NULL) +
+        ggplot2::theme(axis.text.x = element_blank(),
+                       legend.position = "top") +
+        light_theme() +
+        theme(axis.text.x = element_blank(),
+              legend.position = "top") +
+        ggplot2::coord_flip()
+      return(p)
     } else {
-      date_cut <- enquo(datecut)
-      return(
-        df %>%
-          tibble::as_tibble() %>%
-          dplyr::rename_("varcut" = datecut) %>%
-          dplyr::mutate_all(as.character) %>%
-          tidyr::gather(key, value, - varcut) %>%
-          dplyr::mutate(key = factor(key, levels = rev(names(df)))) %>%
-          dplyr::group_by(varcut, key) %>%
-          dplyr::count(na = is.na(value)) %>%
-          dplyr::mutate(na = if_else(na == TRUE, "Sim", "Não")) %>%
-          ggplot2::ggplot(aes(x = key, y = n, fill = na)) +
-          ggplot2::geom_bar(stat = "identity") +
-          ggplot2::scale_fill_manual(values = colors, "Valor é NA?") +
-          ggplot2::facet_wrap(~varcut, scales = "free_x" ,
-                              ncol = df %>% dplyr::pull(!!date_cut) %>% unique %>% length) +
-          ggplot2::labs(title = title, x = NULL, y = NULL) +
-          ggplot2::theme(axis.text.x = element_blank(), legend.position = "top") +
-          ggplot2::coord_flip() +
-          light_theme() +
-          theme(axis.text.x = element_blank())
-      )
+      date_cut <- rlang::enquo(datecut)
+      p <- df %>%
+        tibble::as_tibble() %>%
+        dplyr::rename_("varcut" = datecut) %>%
+        dplyr::mutate_all(as.character) %>%
+        tidyr::gather(key, value, - varcut) %>%
+        dplyr::mutate(key = factor(key, levels = rev(names(df)))) %>%
+        dplyr::group_by(varcut, key) %>%
+        dplyr::count(na = is.na(value)) %>%
+        dplyr::mutate(na = dplyr::if_else(na == TRUE, "Sim", "Não")) %>%
+        ggplot2::ggplot(ggplot2::aes(x = key, y = n, fill = na)) +
+        ggplot2::geom_bar(stat = "identity") +
+        ggplot2::scale_fill_manual(values = colors, "Valor é NA?") +
+        ggplot2::facet_wrap(
+          ~varcut, scales = "free_x" ,
+          ncol = df %>% dplyr::pull(!!date_cut) %>% unique %>% length
+          ) +
+        ggplot2::labs(title = title, x = NULL, y = NULL) +
+        light_theme() +
+        ggplot2::theme(axis.text.x = ggplot2::element_blank(),
+                       legend.position = "top") +
+        ggplot2::coord_flip()
+      return(p)
     }
   } else if (mode == "dark") {
     if (is.null(datecut)){
@@ -98,21 +102,20 @@ plot_na <- function(df, datecut = NULL, title = NULL,
         dplyr::mutate(key = factor(key, levels = rev(names(df)))) %>%
         dplyr::group_by(key) %>%
         dplyr::count(na = is.na(value)) %>%
-        dplyr::mutate(na = if_else(na == TRUE, "Sim", "Não")) %>%
-        ggplot2::ggplot(aes(x = key, y = n, fill = na)) +
+        dplyr::mutate(na = dplyr::if_else(na == TRUE, "Sim", "Não")) %>%
+        ggplot2::ggplot(ggplot2::aes(x = key, y = n, fill = na)) +
         ggplot2::geom_bar(stat = "identity") +
         ggplot2::scale_fill_manual(values = colors, "Valor é NA?") +
         ggplot2::labs(title = title, x = NULL, y = NULL) +
-        ggplot2::theme(axis.text.x = element_blank(),
-                       legend.position = "top") +
-        ggplot2::coord_flip() +
         dark_theme() +
-        theme(axis.text.x = element_blank())
+        ggplot2::theme(axis.text.x = ggplot2::element_blank(),
+                       legend.position = "top") +
+        ggplot2::coord_flip()
       ggdark::invert_geom_defaults()
-      message("ATENTION: Already done inside seda::plot_na")
+      message("ATENTION: Already changed back inside seda::plot_na")
       return(p)
       } else {
-        date_cut <- enquo(datecut)
+        date_cut <- rlang::enquo(datecut)
         p <- df %>%
           tibble::as_tibble() %>%
           dplyr::rename_("varcut" = datecut) %>%
@@ -121,19 +124,21 @@ plot_na <- function(df, datecut = NULL, title = NULL,
           dplyr::mutate(key = factor(key, levels = rev(names(df)))) %>%
           dplyr::group_by(varcut, key) %>%
           dplyr::count(na = is.na(value)) %>%
-          dplyr::mutate(na = if_else(na == TRUE, "Sim", "Não")) %>%
-          ggplot2::ggplot(aes(x = key, y = n, fill = na)) +
+          dplyr::mutate(na = dplyr::if_else(na == TRUE, "Sim", "Não")) %>%
+          ggplot2::ggplot(ggplot2::aes(x = key, y = n, fill = na)) +
           ggplot2::geom_bar(stat = "identity") +
           ggplot2::scale_fill_manual(values = colors, "Valor é NA?") +
-          ggplot2::facet_wrap(~varcut, scales = "free_x" ,
-                              ncol = df %>% dplyr::pull(!!date_cut) %>% unique %>% length) +
+          ggplot2::facet_wrap(
+            ~varcut, scales = "free_x" ,
+            ncol = df %>% dplyr::pull(!!date_cut) %>% unique %>% length
+            ) +
           ggplot2::labs(title = title, x = NULL, y = NULL) +
-          ggplot2::theme(axis.text.x = element_blank(), legend.position = "top") +
-          ggplot2::coord_flip() +
           dark_theme() +
-          theme(axis.text.x = element_blank())
+          ggplot2::theme(axis.text.x = ggplot2::element_blank(),
+                         legend.position = "top") +
+          ggplot2::coord_flip()
         ggdark::invert_geom_defaults()
-        message("ATENTION: Already done inside seda::plot_na")
+        message("ATENTION: Already changed back inside seda::plot_na")
         return(p)
       }
   }
@@ -148,6 +153,8 @@ plot_na <- function(df, datecut = NULL, title = NULL,
 #' @param df a data frame
 #' @param x a string indicating a categorical variable
 #' @param fill a string indicating a categorical variable
+#' @param flip a logical TRUE or FALSE
+#' @param mode a string defining theme: "light" (default) or "dark"
 #'
 #' @details Uses dplyr and ggplot
 #'
@@ -165,68 +172,193 @@ plot_na <- function(df, datecut = NULL, title = NULL,
 #'
 #' # plot more than one variable at once
 #' vars <- c("var5", "cut_var")
-#' plots <- lapply(vars, function(i) plot_bar(df, i))
-#'
-#' @import dplyr ggplot2 sf
+#' plots <- lapply(vars, function(i) plot_bar(sample_data, i))
 #'
 #' @export
-plot_bar <- function(df, x, fill = NULL) {
-  x <- rlang::sym(x)
-  prop <- NULL
-
-  if(is.null(fill)) {
-    maxProp <-
-      df %>%
-      filter(!is.na(!!x)) %>%
-      count(!!x) %>%
-      mutate(prop = prop.table(n)) %>%
-      summarise(maxProp = max(prop) + .08) %>%
-      as.numeric()
-
+plot_bar <- function(df, x, fill = NULL, flip = FALSE, mode = "light") {
+  df <- df %>% tibble::as_tibble %>% dplyr::rename_("target" = x)
+  maxProp <-
     df %>%
-      as.data.frame() %>%
-      filter(!is.na(!!x)) %>%
-      count(!!x) %>%
-      mutate(prop = prop.table(n)) %>%
-      ggplot(aes(y = prop, x = !!x)) +
-      geom_bar(stat = "identity") +
-      scale_y_continuous(labels = scales::percent, limits = c(0, maxProp)) +
-      geom_text(aes(label = scales::percent(round(prop, 3))), hjust=-.1) +
-      labs(title=paste0("Distribuicao de proporcoes para ", colnames(select(df, !!x))),
-           x = NULL, y = NULL) +
-      light_theme() +
-      theme(panel.grid.major.y = element_blank(),
-            panel.grid.minor.y = element_blank()) +
-      coord_flip()
-  } else {
-    fill <- rlang::sym(fill)
-    maxProp <-
-      df %>%
-      filter(!is.na(!!x)) %>%
-      # group_by(!!fill) %>%
-      count(!!x) %>%
-      mutate(prop = prop.table(n)) %>%
-      summarise(maxProp = max(prop) + .08) %>%
-      as.numeric()
+    dplyr::count(target) %>%
+    dplyr::mutate(prop = prop.table(n)) %>%
+    dplyr::summarise(maxProp = max(prop)) %>%
+    as.numeric()
 
-    df %>%
-      as.data.frame() %>%
-      filter(!is.na(!!x)) %>%
-      group_by(!!fill) %>%
-      count(!!x) %>%
-      mutate(prop = prop.table(n)) %>%
-      ggplot(aes(y = prop, x = !!x, fill = !!fill)) +
-      geom_bar(stat = "identity", position = position_dodge()) +
-      geom_text(aes(label = scales::percent(round(prop, 3))),
-                position = position_dodge(width = .9), hjust=-.1) +
-      scale_y_continuous(labels = scales::percent, limits = c(0, maxProp)) +
-      labs(title=paste0("Distribuicao de proporcoes para ", colnames(select(df, !!x))),
-           x = NULL, y = NULL) +
-      light_theme() +
-      theme(panel.grid.major.y = element_blank(),
-            panel.grid.minor.y = element_blank(),
-            legend.position = "top") +
-      coord_flip()
+  if (mode == "light") {
+    if (flip == FALSE) {
+      if (is.null(fill)) {
+        p <- df %>%
+          dplyr::count(target) %>%
+          dplyr::mutate(prop = prop.table(n)) %>%
+          ggplot2::ggplot(ggplot2::aes(y = prop, x = target)) +
+          ggplot2::geom_bar(stat = "identity") +
+          ggplot2::scale_y_continuous(
+            labels = scales::percent,
+            limits = c(0, maxProp + (maxProp / 10)),
+            breaks = seq(0, maxProp + (maxProp / 10), maxProp / 5)
+          ) +
+          ggplot2::geom_text(
+            ggplot2::aes(label = scales::percent(round(prop, 3))),
+            vjust = -.5, fontface = "bold"
+          ) +
+          ggplot2::labs(title = paste("Frequências relativas de", x),
+                        x = NULL, y = NULL) +
+          light_theme()
+        return(p)
+      } else {
+        p <- df %>%
+          dplyr::count(target) %>%
+          dplyr::mutate(prop = prop.table(n)) %>%
+          ggplot2::ggplot(ggplot2::aes(y = prop, x = target, fill = target)) +
+          ggplot2::geom_bar(stat = "identity") +
+          ggplot2::scale_y_continuous(
+            labels = scales::percent,
+            limits = c(0, maxProp + (maxProp / 10)),
+            breaks = seq(0, maxProp + (maxProp / 10), maxProp / 5)
+          ) +
+          ggplot2::geom_text(
+            ggplot2::aes(label = scales::percent(round(prop, 3))),
+            vjust = -.5, fontface = "bold"
+          ) +
+          ggplot2::labs(title = paste("Frequências relativas de", x),
+                        x = NULL, y = NULL) +
+          light_theme()
+        return(p)
+      }
+    } else if (flip == TRUE) {
+      if (is.null(fill)) {
+        p <- df %>%
+          dplyr::count(target) %>%
+          dplyr::mutate(prop = prop.table(n)) %>%
+          ggplot2::ggplot(ggplot2::aes(y = prop, x = target)) +
+          ggplot2::geom_bar(stat = "identity") +
+          ggplot2::scale_y_continuous(
+            labels = scales::percent,
+            limits = c(0, maxProp + (maxProp / 10)),
+            breaks = seq(0, maxProp + (maxProp / 10), maxProp / 5)
+          ) +
+          ggplot2::geom_text(
+            ggplot2::aes(label = scales::percent(round(prop, 3))),
+            vjust = .5, hjust = -.2, fontface = "bold"
+          ) +
+          ggplot2::labs(title = paste("Frequências relativas de", x),
+                        x = NULL, y = NULL) +
+          light_theme() +
+          coord_flip()
+        return(p)
+      } else {
+        p <- df %>%
+          dplyr::count(target) %>%
+          dplyr::mutate(prop = prop.table(n)) %>%
+          ggplot2::ggplot(ggplot2::aes(y = prop, x = target, fill = target)) +
+          ggplot2::geom_bar(stat = "identity") +
+          ggplot2::scale_y_continuous(
+            labels = scales::percent,
+            limits = c(0, maxProp + (maxProp / 10)),
+            breaks = seq(0, maxProp + (maxProp / 10), maxProp / 5)
+          ) +
+          ggplot2::geom_text(
+            ggplot2::aes(label = scales::percent(round(prop, 3))),
+            vjust = .5, hjust = -.2, fontface = "bold"
+          ) +
+          ggplot2::labs(title = paste("Frequências relativas de", x),
+                        x = NULL, y = NULL) +
+          light_theme() +
+          coord_flip()
+        return(p)
+      }
+    }
+  } else if (mode == "dark") {
+    if (flip == FALSE) {
+      if (is.null(fill)) {
+        p <- df %>%
+          dplyr::count(target) %>%
+          dplyr::mutate(prop = prop.table(n)) %>%
+          ggplot2::ggplot(ggplot2::aes(y = prop, x = target)) +
+          ggplot2::geom_bar(stat = "identity") +
+          ggplot2::scale_y_continuous(
+            labels = scales::percent,
+            limits = c(0, maxProp + (maxProp / 10)),
+            breaks = seq(0, maxProp + (maxProp / 10), maxProp / 5)
+          ) +
+          ggplot2::geom_text(
+            ggplot2::aes(label = scales::percent(round(prop, 3))),
+            vjust = -.5, fontface = "bold", color = "grey"
+          ) +
+          ggplot2::labs(title = paste("Frequências relativas de", x),
+                        x = NULL, y = NULL) +
+          dark_theme()
+        ggdark::invert_geom_defaults()
+        message("ATENTION: Already changed back inside seda::plot_na")
+        return(p)
+      } else {
+        p <- df %>%
+          dplyr::count(target) %>%
+          dplyr::mutate(prop = prop.table(n)) %>%
+          ggplot2::ggplot(ggplot2::aes(y = prop, x = target, fill = target)) +
+          ggplot2::geom_bar(stat = "identity") +
+          ggplot2::scale_y_continuous(
+            labels = scales::percent,
+            limits = c(0, maxProp + (maxProp / 10)),
+            breaks = seq(0, maxProp + (maxProp / 10), maxProp / 5)
+          ) +
+          ggplot2::geom_text(
+            ggplot2::aes(label = scales::percent(round(prop, 3))),
+            vjust = -.5, fontface = "bold", color = "grey"
+          ) +
+          ggplot2::labs(title = paste("Frequências relativas de", x),
+                        x = NULL, y = NULL) +
+          dark_theme()
+        ggdark::invert_geom_defaults()
+        message("ATENTION: Already changed back inside seda::plot_na")
+        return(p)
+      }
+    } else if (flip == TRUE) {
+      if (is.null(fill)) {
+        p <- df %>%
+          dplyr::count(target) %>%
+          dplyr::mutate(prop = prop.table(n)) %>%
+          ggplot2::ggplot(ggplot2::aes(y = prop, x = target)) +
+          ggplot2::geom_bar(stat = "identity") +
+          ggplot2::scale_y_continuous(
+            labels = scales::percent,
+            limits = c(0, maxProp + (maxProp / 10)),
+            breaks = seq(0, maxProp + (maxProp / 10), maxProp / 5)
+          ) +
+          ggplot2::geom_text(
+            ggplot2::aes(label = scales::percent(round(prop, 3))),
+            vjust = .5, hjust = -.2, fontface = "bold", color = "grey"
+          ) +
+          ggplot2::labs(title = paste("Frequências relativas de", x),
+                        x = NULL, y = NULL) +
+          dark_theme() +
+          coord_flip()
+        ggdark::invert_geom_defaults()
+        message("ATENTION: Already changed back inside seda::plot_na")
+        return(p)
+      } else {
+        p <- df %>%
+          dplyr::count(target) %>%
+          dplyr::mutate(prop = prop.table(n)) %>%
+          ggplot2::ggplot(ggplot2::aes(y = prop, x = target, fill = target)) +
+          ggplot2::geom_bar(stat = "identity") +
+          ggplot2::scale_y_continuous(
+            labels = scales::percent,
+            limits = c(0, maxProp + (maxProp / 10)),
+            breaks = seq(0, maxProp + (maxProp / 10), maxProp / 5)
+          ) +
+          ggplot2::geom_text(
+            ggplot2::aes(label = scales::percent(round(prop, 3))),
+            vjust = .5, hjust = -.2, fontface = "bold", color = "grey"
+          ) +
+          ggplot2::labs(title = paste("Frequências relativas de", x),
+                        x = NULL, y = NULL) +
+          dark_theme() +
+          coord_flip()
+        ggdark::invert_geom_defaults()
+        message("ATENTION: Already changed back inside seda::plot_na")
+        return(p)
+      }
+    }
   }
 }
-
