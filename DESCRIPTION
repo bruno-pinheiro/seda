@@ -1,0 +1,36 @@
+Package: seda
+Type: Package
+Title: Simple exploratory data analysis in R
+Version: 0.0.1
+Authors@R: person("Bruno", "Pinheiro de Oliveira", 
+                  email = "brunopinheiro.net@gmail.com",
+                  role = c("aut", "cre"))
+Description: Um pacote com funções para simplificar a produção de análises
+    exploratórias no R. Tudo de forma simples e direta.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Depends: 
+    R (>= 3.0.0), 
+    ggplot2 (>= 3.1.0),
+    extrafont
+Imports:
+    dplyr (>= 0.8.0.1),
+    tibble (>= 2.0.1),
+    tsibble (>= 0.7.0),
+    tidyr (>= 0.8.2),
+    stringr (>= 1.3.1),
+    ggdark (>= 0.2.1),
+    ggTimeSeries (>= 1.0.1),
+    readr (>= 1.1.1),
+    sf (>= 0.6.3),
+    rlang (>= 0.3.1),
+    magrittr (>= 1.5),
+    ddpcr (>= 1.11),
+    forcats,
+    scales,
+    grDevices,
+    stats,
+    utils
+RoxygenNote: 6.1.1
+Maintainer: Bruno Pinheiro de Oliveira <brunopinheiro.net@gmail.com>
