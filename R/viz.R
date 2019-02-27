@@ -11,6 +11,7 @@
 #' @param theme a string defining theme: "light" (default) or "dark"
 #' @param colors a character vector of lenght 2, indicating NA and non-NA
 #'        colors in the plot
+#' @inheritParams light_theme
 #'
 #' @details This function is tidyverse based. It transforms the data in a
 #'          \code{\link{tibble}}, \code{\link{gather}} and \code{\link{count}}
@@ -46,14 +47,15 @@
 #' @importFrom rlang .data
 #' @import ggplot2
 #'
+#'
 #' @export
 plot_na <- function(df,
                     varcut = NULL,
                     title = NULL,
                     theme = "light",
                     colors = c("darkgrey", "red"),
-                    base_family = "Fira Sans Condensed",
-                    family = "Fira Sans Condensed Medium") {
+                    base_font = "Fira Sans Condensed",
+                    title_font = "Fira Sans Condensed Medium") {
   dt <- df %>% tibble::as_tibble() %>% dplyr::mutate_all(as.character)
   if (is.null(varcut)){
     dt <- dt %>%
@@ -86,14 +88,14 @@ plot_na <- function(df,
     )
   }
   if (theme == "light") {
-    p <- p  + light_theme(base_family, family) +
+    p <- p  + light_theme(base_font, title_font) +
       ggplot2::theme(
         axis.text.x = ggplot2::element_blank(),
         legend.position = "top"
         )
   } else if (theme == "dark") {
     ddpcr::quiet(
-      p <- p + dark_theme(base_family, family) +
+      p <- p + dark_theme(base_font, title_font) +
         ggplot2::theme(
           axis.text.x = ggplot2::element_blank(),
           legend.position = "top"
@@ -113,12 +115,13 @@ plot_na <- function(df,
 #'
 #' @param df a data frame
 #' @param x a string indicating a categorical variable
-#' @param title a string defining the plot title
 #' @param fillc bar colors when fill == FALSE
 #' @param fill a string indicating a categorical variable
 #' @param flip a logical TRUE or FALSE
-#' @param theme a string defining theme: "light" (default) or "dark"
 #' @param mode a string defining mode: "count" (default) od "prop"
+#' @param subtitle a string defining de subtitle of plot
+#' @inheritParams plot_na
+#' @inheritParams light_theme
 #'
 #' @details Uses dplyr and ggplot
 #'
@@ -128,26 +131,26 @@ plot_na <- function(df,
 #'
 #' @examples
 #' # simple barplot
-#' plot_bar(sample_data, var5)
+#' plot_bar(sample_data, "var5")
 #'
 #' # plot more than one variable at once
-#' vars <- c("var5", "cut_var")
+#' vars <- c("var5", "year")
 #' plots <- lapply(vars, function(i) plot_bar(sample_data, i))
 #'
 #' @importFrom rlang .data
 #' @import ggplot2
+#' @importFrom magrittr "%>%"
 #'
 #' @export
-plot_bar <- function(df,
-                     x,
-                     title = NULL,
+plot_bar <- function(df, x,
+                     title = NULL, subtitle = NULL,
                      theme = "light",
                      mode = "count",
                      fill = FALSE,
                      flip = FALSE,
                      fillc = "darkgrey",
-                     base_family = "Fira Sans Condensed",
-                     family = "Fira Sans Condensed Medium") {
+                     base_font = "Fira Sans Condensed",
+                     title_font = "Fira Sans Condensed Medium") {
 
   dt <- df %>% tibble::as_tibble() %>% dplyr::rename("target" = x)
   # count variable
@@ -216,15 +219,15 @@ plot_bar <- function(df,
   }
   # add theme
   if (theme == "light") {
-    p <- p + light_theme(base_family, family)
+    p <- p + light_theme(base_font, title_font)
 
   } else if (theme == "dark") {
-    ddpcr::quiet(p <- p + dark_theme(base_family, family), all = TRUE)
+    ddpcr::quiet(p <- p + dark_theme(base_font, title_font), all = TRUE)
     ggdark::invert_geom_defaults()
   }
   # add labs
   p <- p + ggplot2::labs(
-    title = title,
+    title = title, subtitle = subtitle,
     x = NULL, y = NULL
     )
   # output
@@ -237,15 +240,9 @@ plot_bar <- function(df,
 #' @description It counts a categorical variable and plots a publication
 #'              ready ggplot2 barplot
 #'
-#' @param df a data frame
-#' @param x a string indicating a categorical variable
 #' @param y a string indicating a numeric variable
-#' @param title a string defining the plot title
-#' @param fillc bar colors when fill == FALSE
-#' @param fill a string indicating a categorical variable
-#' @param flip a logical TRUE or FALSE
-#' @param theme a string defining theme: "light" (default) or "dark"
-#' @param mode a string defining mode: "count" (default) or "prop"
+#' @param order TRUE/FALSE indicating if bars shoul be ordered (default is TRUE)
+#' @inheritParams plot_bar
 #'
 #' @details Uses dplyr and ggplot
 #'
@@ -254,14 +251,16 @@ plot_bar <- function(df,
 #' @author Bruno Pinheiro
 #'
 #' @examples
+#' library(dplyr)
 #' sample_data %>%
 #'   filter(!is.na(var5)) %>%
 #'   count(var5) %>%
 #'   plot_bar_id(x = "var5",
 #'               y = "n",
-#'               fill = T)
+#'               fill = TRUE)
 #'
 #' @importFrom rlang .data
+#' @importFrom magrittr "%>%"
 #' @import ggplot2
 #'
 #' @export
@@ -274,8 +273,8 @@ plot_bar_id <- function(df,
                         fill = FALSE,
                         flip = FALSE,
                         fillc = "darkgrey",
-                        base_family = "Fira Sans Condensed",
-                        family = "Fira Sans Condensed Medium",
+                        base_font = "Fira Sans Condensed",
+                        title_font = "Fira Sans Condensed Medium",
                         title = NULL,
                         subtitle = NULL) {
 
@@ -287,14 +286,14 @@ plot_bar_id <- function(df,
   # create ggplot2 mapping to geometries
   if (order == TRUE) {
     p <- ggplot2::ggplot(
-      dt, ggplot2::aes(x = reorder(.data$targetx, -.data$targety),
+      dt, ggplot2::aes(x = stats::reorder(.data$targetx, -.data$targety),
                        y = .data$targety))
     if (fill == FALSE) {
       p <- p + ggplot2::geom_bar(stat = "identity", fill = fillc)
 
     } else if (fill == TRUE) {
       p <- p + ggplot2::geom_bar(
-        ggplot2::aes(fill = reorder(.data$targetx, .data$targety)),
+        ggplot2::aes(fill = stats::reorder(.data$targetx, .data$targety)),
         stat = "identity"
         ) +
         ggplot2::guides(fill = ggplot2::guide_legend(title = x))
@@ -308,7 +307,7 @@ plot_bar_id <- function(df,
 
     } else if (fill == TRUE) {
       p <- p + ggplot2::geom_bar(
-        ggplot2::aes(fill = reorder(.data$targetx, .data$targety)),
+        ggplot2::aes(fill = stats::reorder(.data$targetx, .data$targety)),
         stat = "identity"
         ) +
         ggplot2::guides(fill = ggplot2::guide_legend(title = x))
@@ -326,14 +325,14 @@ plot_bar_id <- function(df,
           ggplot2::geom_text(
             ggplot2::aes(label = .data$targety),
             vjust = -1, fontface = "bold", color = "grey10"
-          ) + light_theme(base_family, family)
+          ) + light_theme(base_font, title_font)
       } else if (theme == "dark") {
         ddpcr::quiet(
           p <- p +
             ggplot2::geom_text(
               ggplot2::aes(label = .data$targety),
               vjust = -1, fontface = "bold", color = "grey90"
-            ) + dark_theme(base_family, family),
+            ) + dark_theme(base_font, title_font),
         all = TRUE
         )
       }
@@ -343,7 +342,7 @@ plot_bar_id <- function(df,
           ggplot2::geom_text(
             ggplot2::aes(label = .data$targety),
             vjust = .5, hjust = -.2, fontface = "bold", color = "grey10"
-          ) +  light_theme(base_family, family) +
+          ) +  light_theme(base_font, title_font) +
           coord_flip()
       } else if (theme == "dark") {
         ddpcr::quiet(
@@ -351,7 +350,7 @@ plot_bar_id <- function(df,
             ggplot2::geom_text(
               ggplot2::aes(label = .data$targety),
               vjust = .5, hjust = -.2, fontface = "bold", color = "grey90"
-            ) + dark_theme(base_family, family) +
+            ) + dark_theme(base_font, title_font) +
             coord_flip(),
           add = TRUE
         )
@@ -369,14 +368,14 @@ plot_bar_id <- function(df,
           ggplot2::geom_text(
             ggplot2::aes(label = scales::percent(.data$targety, accuracy = .1)),
             vjust = -1, fontface = "bold", color = "grey10"
-          ) + light_theme(base_family, family)
+          ) + light_theme(base_font, title_font)
       } else if (theme == "dark") {
         ddpcr::quiet(
           p <- p +
             ggplot2::geom_text(
               ggplot2::aes(label = scales::percent(.data$targety, accuracy = .1)),
               vjust = -1, fontface = "bold", color = "grey90"
-            ) + dark_theme(base_family, family),
+            ) + dark_theme(base_font, title_font),
           all = TRUE
         )
       }
@@ -386,7 +385,7 @@ plot_bar_id <- function(df,
           ggplot2::geom_text(
             ggplot2::aes(label = scales::percent(.data$targety, accuracy = .1)),
             vjust = .5, hjust = -.2, fontface = "bold", color = "grey10"
-          ) +  light_theme(base_family, family) +
+          ) +  light_theme(base_font, title_font) +
           coord_flip()
       } else if (theme == "dark") {
         ddpcr::quiet(
@@ -394,7 +393,7 @@ plot_bar_id <- function(df,
             ggplot2::geom_text(
               ggplot2::aes(label = scales::percent(.data$targety, accuracy = .1)),
               vjust = .5, hjust = -.2, fontface = "bold", color = "grey90"
-            ) + dark_theme(base_family, family) +
+            ) + dark_theme(base_font, title_font) +
             coord_flip(),
           all = TRUE
         )
