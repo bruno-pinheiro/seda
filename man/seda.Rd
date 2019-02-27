@@ -12,10 +12,10 @@ and exploratory analysis tasks.
 }
 \details{
 It's a \code{tidyverse} based package. Data are imported with
-\code{readr} and manipulated as \code{tibble}, using pipelines "%>%".
+\code{readr} and manipulated as \code{tibble}, using pipelines.
 Plots are made with \code{ggplot2}
 
-Beyound that, it has some functions to retrieve Census data from Brazil,
+Beyound that, it has some functions to retrieve brazilian Census data
 from IBGE.
 
 It's still in development and is more a personal package than a powerfull
