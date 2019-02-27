@@ -17,6 +17,37 @@ Plots are made with \code{ggplot2}
 
 Beyound that, it has some functions to retrieve brazilian Census data
 from IBGE.
+}
+\section{Descriptive functions}{
+
+Function to visualize data:
+
+\itemize{
+  \item \code{plot_na}
+  \item \code{plot_bar}
+  \item \code{plot_bar_id}
+}
+}
+
+\section{Get data functions}{
+
+Function to download and import IBGE data
+
+\itemize{
+  \item \code{get_ibge}
+  \item \code{read_ibge}
+  \item \code{read_geoibge}
+}
+}
+
+\section{File manipulation functions}{
+
+Functions to manipulate files on temporary folder
+
+\itemize{
+  \item \code{list_tmp}
+  \item \code{clean_tmp}
+}
 
 It's still in development and is more a personal package than a powerfull
 tool builded for the public. But if makes my life easier, could do the same
@@ -29,45 +60,6 @@ tested in another systems}.
 I would appreaciate any feedback. A lot!
 
 Enjoy by your own risk.
-}
-\section{Descriptie functions}{
-
-
-\describe{
-Function to visualize data:
-
-\itemize{
-  \item \code{plot_na}
-  \item \code{plot_bar}
-  \item \code{plot_bar_id}
-}
-}
-}
-
-\section{Get data functions}{
-
-
-\describe{
-Function to download and import IBGE data
-
-\itemize{
-  \item \code{get_ibge}
-  \item \code{read_ibge}
-  \item \code{read_geoibge}
-}
-}
-}
-
-\section{File manipulation functions}{
-
-Functions to manipulate files on temporary folder
-
-\describe{
-\itemize{
-  \item \code{list_tmp}
-  \item \code{clean_tmp}
-}
-}
 }
 
 \author{

@@ -118,7 +118,7 @@ plot_na <- function(df,
 #' @param fillc bar colors when fill == FALSE
 #' @param fill a string indicating a categorical variable
 #' @param flip a logical TRUE or FALSE
-#' @param mode a string defining mode: "count" (default) od "prop"
+#' @param mode a string defining mode: "count" (default) or "prop"
 #' @param subtitle a string defining de subtitle of plot
 #' @inheritParams plot_na
 #' @inheritParams light_theme

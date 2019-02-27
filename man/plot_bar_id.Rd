@@ -21,7 +21,7 @@ plot_bar_id(df, x, y, order = FALSE, theme = "light", mode = "count",
 
 \item{theme}{a string defining theme: "light" (default) or "dark"}
 
-\item{mode}{a string defining mode: "count" (default) od "prop"}
+\item{mode}{a string defining mode: "count" (default) or "prop"}
 
 \item{fill}{a string indicating a categorical variable}
 

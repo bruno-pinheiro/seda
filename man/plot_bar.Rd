@@ -20,7 +20,7 @@ plot_bar(df, x, title = NULL, subtitle = NULL, theme = "light",
 
 \item{theme}{a string defining theme: "light" (default) or "dark"}
 
-\item{mode}{a string defining mode: "count" (default) od "prop"}
+\item{mode}{a string defining mode: "count" (default) or "prop"}
 
 \item{fill}{a string indicating a categorical variable}
 
