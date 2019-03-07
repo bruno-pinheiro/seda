@@ -5,7 +5,7 @@
 \title{Dark theme for ggplot2}
 \usage{
 dark_theme(base_font = "Fira Sans Condensed",
-  title_font = "Fira Sans Condensed Medium")
+  title_font = "Fira Sans Condensed Medium", base_size = 12)
 }
 \arguments{
 \item{base_font}{a string indicating which font to use (default is Fira
@@ -13,6 +13,8 @@ Sans Condensed)}
 
 \item{title_font}{a string indicating which font to use (default is Fira
 Sans Condensed Medium)}
+
+\item{base_size}{a numerica value indicating the base font size of the plot}
 }
 \value{
 a predefined \code{ggplot2} theme based on
